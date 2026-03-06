@@ -31,7 +31,7 @@ jobs:
         crtx_url=$(echo $crtx_resp | jq -r ".signed_url")
         curl -o cortexcli $crtx_url
         chmod +x cortexcli
-        ./cortexcli --versio
+        ./cortexcli --version
 
       - name: Scan Image with Cortex
         run: |
