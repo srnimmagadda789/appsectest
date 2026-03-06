@@ -24,7 +24,7 @@ jobs:
 
       - name: Download cortexcli
         run: |
-          crtx_resp=$(curl -s -H "x-xdr-auth-id: ${CORTEX_API_KEY_ID}" -H "Authorization: ${CORTEX_API_KEY}" "${CORTEX_API_URL}/public_api/v1/unified-cli/releases/download-link?os=linux&architecture=amd64")
+          crtx_resp=$(curl -s -H "x-xdr-auth-id: ${CORTEX_API_KEY_ID}" -H "Authorization: ${CORTEX_API_KEY}" "https://api-pcscortexcloud.xdr.us.paloaltonetworks.com/public_api/v1/unified-cli/releases/download-link?os=linux&architecture=amd64")
           # Some Cortex versions use .reply, others use .signed_url. 
           # This line handles both by checking for signed_url first.
           crtx_url=$(echo $crtx_resp | jq -r '.signed_url // .reply')
