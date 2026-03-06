@@ -24,6 +24,7 @@ jobs:
 
       - name: Download cortexcli
         run: |
+          echo "URL is: $crtx_url"
           crtx_resp=$(curl -s -H "x-xdr-auth-id: ${CORTEX_API_KEY_ID}" -H "Authorization: ${CORTEX_API_KEY}" "${CORTEX_API_URL}/public_api/v1/unified-cli/releases/download-link?os=linux&architecture=amd64")
           # Some Cortex versions use .reply, others use .signed_url. 
           # This line handles both by checking for signed_url first.
