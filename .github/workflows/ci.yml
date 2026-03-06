@@ -19,26 +19,30 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # 1. Build the image locally (don't push yet)
       - name: Build Nginx Image
         run: |
-          docker build -t my-nginx-app:latest .
-          # If you don't have a Dockerfile, you can use:
+          # Pulling the official image to simulate a build if no Dockerfile exists
           docker pull nginx:latest
           docker tag nginx:latest my-nginx-app:latest
 
-      # 2. Download Cortex CLI
-      - name: Download Cortex CLI
+      - name: Download and Setup Cortex CLI
         run: |
-        curl -H "x-xdr-auth-id: ${CORTEX_API_KEY_ID}" -H "Authorization: ${CORTEX_API_KEY}" "${CORTEX_API_URL}/public_api/v1/unified-cli/releases/download-link?os=linux&architecture=amd64"
-        chmod +x cortexcli
-        ./cortexcli --version
+          # 1. Get the download URL from the API
+          DOWNLOAD_URL=$(curl -s -X GET \
+            -H "x-xdr-auth-id: ${CORTEX_API_KEY_ID}" \
+            -H "Authorization: ${CORTEX_API_KEY}" \
+            -H "Content-Type: application/json" \
+            "${CORTEX_API_URL}/public_api/v1/unified-cli/releases/download-link?os=linux&architecture=amd64" | jq -r '.reply')
+          
+          # 2. Download the actual binary
+          curl -L -o cortexcli "$DOWNLOAD_URL"
+          chmod +x cortexcli
+          ./cortexcli --version
 
-      # 3. Run the Scan
-      # Replace <YOUR_SERVICE_TAG> with your actual service identifier in Cortex
       - name: Scan Image with Cortex
         run: |
-          sudo ./cortexcli --api-base-url "${CORTEX_API_URL}" --api-key "${CORTEX_API_KEY}" --api-key-id "${CORTEX_API_KEY_ID}" images scan my-nginx-app:latest
+          # Run the scan and point to the built image
+          ./cortexcli images scan my-nginx-app:latest \
+            --api-base-url "${CORTEX_API_URL}" \
+            --api-key "${CORTEX_API_KEY}" \
+            --api-key-id "${CORTEX_API_KEY_ID}"
