@@ -1,0 +1,46 @@
+name: Build and Scan Nginx Image
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+    environment: Cortex
+    env:
+      CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
+      CORTEX_API_KEY_ID: ${{ secrets.CORTEX_API_KEY_ID }}
+      CORTEX_API_URL: ${{ secrets.CORTEX_API_URL }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 1. Build the image locally (don't push yet)
+      - name: Build Nginx Image
+        run: |
+          docker build -t my-nginx-app:latest .
+          # If you don't have a Dockerfile, you can use:
+          docker pull nginx:latest
+          docker tag nginx:latest my-nginx-app:latest
+
+      # 2. Download Cortex CLI
+      - name: Download Cortex CLI
+        run: |
+        crtx_resp=$(curl -H "x-xdr-auth-id: ${CORTEX_API_KEY_ID}" -H "Authorization: ${CORTEX_API_KEY}" "${CORTEX_API_URL}/public_api/v1/unified-cli/releases/download-link?os=linux&architecture=amd64")
+        crtx_url=$(echo $crtx_resp | jq -r ".signed_url")
+        curl -o cortexcli $crtx_url
+        chmod +x cortexcli
+        ./cortexcli --version
+
+      # 3. Run the Scan
+      # Replace <YOUR_SERVICE_TAG> with your actual service identifier in Cortex
+      - name: Scan Image with Cortex
+        run: |
+          sudo ./cortexcli --api-base-url "${CORTEX_API_URL}" --api-key "${CORTEX_API_KEY}" --api-key-id "${CORTEX_API_KEY_ID}" images scan my-nginx-app:latest
