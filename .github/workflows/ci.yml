@@ -33,7 +33,7 @@ jobs:
       # 2. Download Cortex CLI
       - name: Download Cortex CLI
         run: |
-        curl -k -u $CORTEX_API_ID::$CORTEX_API_KEY --output ./cortexcli $CORTEX_FQDN/api/v2/remote-li/{version}/{platform}/artifacts
+        curl -H "x-xdr-auth-id: ${CORTEX_API_KEY_ID}" -H "Authorization: ${CORTEX_API_KEY}" "${CORTEX_API_URL}/public_api/v1/unified-cli/releases/download-link?os=linux&architecture=amd64"
         chmod +x cortexcli
         ./cortexcli --version
 
